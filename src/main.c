@@ -7,6 +7,7 @@ static TextLayer *text_1_layer;
 static TextLayer *text_2_layer;
 static TextLayer *label_layer;
 static TextLayer *time_layer;
+//static ClickConfigProvider *config_provider;
 
 static AppSync sync;
 static uint8_t sync_buffer[64];
@@ -23,7 +24,6 @@ void sync_tuple_changed_callback(const uint32_t key,
     case OUR_LOCATION:    
       text_layer_set_text(text_1_layer, new_tuple->value->cstring);
       break;
-    case OUR_THEFT:
     
   }  
 }
@@ -65,7 +65,7 @@ static void init_clock(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  time_layer = text_layer_create(GRect(0, 0, bounds.size.w, bounds.size.h-100));
+  time_layer = text_layer_create(GRect(0, 0, bounds.size.w, bounds.size.h-200));
   text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
   text_layer_set_text_color(time_layer, GColorWhite);
   text_layer_set_background_color(time_layer, GColorClear);
@@ -83,15 +83,15 @@ static void init_location_search(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  label_layer = text_layer_create((GRect) { .origin = { 0, 50 }, .size = { bounds.size.w, 100 } });
-  text_layer_set_text(label_layer, "WatchOut Report");
+  label_layer = text_layer_create((GRect) { .origin = { 0, 10 }, .size = { bounds.size.w, 100 } });
+  text_layer_set_text(label_layer, "WatchOut Report\n");
   text_layer_set_text_color(label_layer, GColorWhite);
   text_layer_set_text_alignment(label_layer, GTextAlignmentCenter);
   text_layer_set_background_color(label_layer, GColorClear);
   text_layer_set_font(label_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
   layer_add_child(window_layer, text_layer_get_layer(label_layer));
 
-  text_1_layer = text_layer_create((GRect) { .origin = { 0,80 }, .size = { bounds.size.w, bounds.size.h } });
+  text_1_layer = text_layer_create((GRect) { .origin = { 0,30 }, .size = { bounds.size.w, bounds.size.h } });
   text_layer_set_text(text_1_layer, "Loading...");
   text_layer_set_text_color(text_1_layer, GColorWhite);
   text_layer_set_text_alignment(text_1_layer, GTextAlignmentCenter);
@@ -99,8 +99,7 @@ static void init_location_search(Window *window) {
   text_layer_set_overflow_mode(text_1_layer, GTextOverflowModeFill);
   text_layer_set_font(text_1_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(text_1_layer));
-  
-  
+ 
   Tuplet initial_values[] = {
      TupletCString(OUR_LOCATION, "Loading...")
   };
@@ -127,13 +126,20 @@ static void init(void) {
     .load = window_load,
     .unload = window_unload,
   });
-
+  
+  
+  //window_set_click_config_provider(window, click_config_provider);
   app_message_open(64, 64);
+  
+  //window_set_click_config_provider(&window, (ClickConfigProvider) config_provider);
+  //window_set_click_config_provider(window,config_provider);
+  
   
   const bool animated = true;
   window_stack_push(window, animated);
   window_set_background_color(window, GColorBlack);
 }
+
 
 static void deinit(void) {
   window_destroy(window);
@@ -141,7 +147,6 @@ static void deinit(void) {
 
 int main(void) {
   init();
-
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", window);
 
   app_event_loop();
@@ -171,20 +176,12 @@ Call the send function with an int value for every button.
 6-long down
 */
 
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-  send_int(0, 3);  
-}
-
-static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  send_int(0, 1);
-}
-
-static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  send_int(0, 5);
-}
-
 static void select_long_click_handler(ClickRecognizerRef recognizer, void *context) {
   send_int(0, 4);
+}
+
+static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  send_int(0,3);
 }
 
 static void up_long_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -196,12 +193,25 @@ static void down_long_click_handler(ClickRecognizerRef recognizer, void *context
 }
 
 static void click_config_provider(void *context) {
-  window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
-  window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
   window_long_click_subscribe(BUTTON_ID_SELECT, 700, select_long_click_handler, NULL);
   window_long_click_subscribe(BUTTON_ID_UP, 700, up_long_click_handler, NULL);
   window_long_click_subscribe(BUTTON_ID_DOWN, 700, down_long_click_handler, NULL);
 }
 
 
+/* 
+void config_provider(Window *window) {
+ // single click / repeat-on-hold config:
+  window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
+  window_single_repeating_click_subscribe(BUTTON_ID_SELECT, 1000, select_single_click_handler);
+
+  // multi click config:
+  window_multi_click_subscribe(BUTTON_ID_SELECT, 2, 10, 0, true, select_multi_click_handler);
+
+  // long click config:
+  window_long_click_subscribe(BUTTON_ID_SELECT, 700, select_long_click_handler, select_long_click_release_handler);
+}
+
+
+*/
