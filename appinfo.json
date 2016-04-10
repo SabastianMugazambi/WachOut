@@ -1,0 +1,25 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        "location"
+    ],
+    "companyName": "mugazambis@carleton.edu",
+    "enableMultiJS": true,
+    "longName": "Starbucks",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "3",
+    "shortName": "Starbucks",
+    "targetPlatforms": [
+        "aplite",
+        "basalt",
+        "chalk"
+    ],
+    "uuid": "05376fa6-fb6f-4a78-abef-d0e669e344b5",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
